@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   fitsModels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Model' }],
+  fitsYears: [{ type: Number }], // NEW: Exact years this part fits
   originalPrice: { type: Number, required: true },
   salePrice: { type: Number, required: true },
   condition: { type: String, enum: ['New', 'Used', 'Junkyard'], required: true },

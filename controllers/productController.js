@@ -11,14 +11,21 @@ exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find()
       .populate('category', 'name')
-      .populate('fitsModels', 'name yearStart yearEnd');
+      .populate({
+        path: 'fitsModels',
+        select: 'name yearStart yearEnd',
+        populate: {
+          path: 'make',
+          select: 'name' // <--- THIS FIXES THE "UNKNOWN" ISSUE
+        }
+      });
     res.status(200).json(products);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
 exports.addProduct = async (req, res) => {
   try {
-    const { name, description, category, originalPrice, salePrice, condition, fitsModels } = req.body;
+    const { name, description, category, originalPrice, salePrice, condition, fitsModels, fitsYears } = req.body;
     
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'At least one image is required' });
@@ -35,12 +42,13 @@ exports.addProduct = async (req, res) => {
       imageUrls.push(result.secure_url);
     }
 
-    // fitsModels comes as a JSON string from the frontend, so we parse it
     const parsedModels = JSON.parse(fitsModels);
+    const parsedYears = fitsYears ? JSON.parse(fitsYears) : []; // Parse exact years
 
     const newProduct = new Product({
       name, description, category, originalPrice, salePrice, condition, 
       fitsModels: parsedModels, 
+      fitsYears: parsedYears,
       images: imageUrls 
     });
     
