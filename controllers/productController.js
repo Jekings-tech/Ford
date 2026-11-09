@@ -63,3 +63,39 @@ exports.deleteProduct = async (req, res) => {
     res.status(200).json({ message: 'Product deleted' });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
+exports.editProduct = async (req, res) => {
+  try {
+    const { name, description, category, originalPrice, salePrice, condition, fitsModels, fitsYears } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    let imageUrls = product.images;
+    if (req.files && req.files.length > 0) {
+      imageUrls = [];
+      for (const file of req.files) {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ folder: 'apc_products' }, (error, result) => {
+            if (error) reject(error); else resolve(result);
+          });
+          stream.end(file.buffer);
+        });
+        imageUrls.push(result.secure_url);
+      }
+    }
+
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.category = category || product.category;
+    product.originalPrice = originalPrice || product.originalPrice;
+    product.salePrice = salePrice || product.salePrice;
+    product.condition = condition || product.condition;
+    product.images = imageUrls;
+    
+    if (fitsModels) product.fitsModels = JSON.parse(fitsModels);
+    if (fitsYears) product.fitsYears = JSON.parse(fitsYears);
+
+    await product.save();
+    res.status(200).json(product);
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};

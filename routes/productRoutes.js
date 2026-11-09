@@ -7,4 +7,5 @@ const { getProducts, addProduct, deleteProduct } = require('../controllers/produ
 router.get('/', getProducts);
 router.post('/', upload.array('images', 10), addProduct); // Expects up to 10 'images'
 router.delete('/:id', deleteProduct);
+router.put('/:id', upload.array('images', 10), editProduct);
 module.exports = router;
